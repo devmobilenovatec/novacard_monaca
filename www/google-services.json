@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "941666993355",
+    "firebase_url": "https://fidlink-90b72.firebaseio.com",
+    "project_id": "fidlink-90b72",
+    "storage_bucket": "fidlink-90b72.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941666993355:android:bbda66d948c90f46",
+        "android_client_info": {
+          "package_name": "com.novatec.fidlink"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "941666993355-ad7vb0s97208pmr2g37kft5c8i2d7ql3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJNj8S__Hq9IZEdCNNjj2FYO2zUQbQ-54"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

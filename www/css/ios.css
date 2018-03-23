@@ -1,0 +1,11 @@
+/* Special CSS elements that render better with those settings on iOS */
+.toolbar{
+	background-size: auto 68% !important; 
+	background-position: center 15px !important;	
+}
+.button--barbutton{
+	top:15px !important;
+}
+.button--pBack{
+	top : 10px !important;
+}

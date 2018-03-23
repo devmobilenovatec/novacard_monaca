@@ -1,0 +1,527 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+ <script src="components/loader.js"></script>
+ 
+ <!--  ONSEN LIBS -->
+  <script src="lib/angular/angular.js"></script>
+  <!-- <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>  -->
+  <script src="lib/onsen/js/onsenui.js"></script> 
+  
+  <!-- Ajout jQuery -->
+  <script src="js/jquery-3.1.1.min.js"></script>
+  <!--  ONSEN LIBS -->
+  <script src="lib/onsen/js/angular-onsenui.min.js"></script>
+  
+  <!-- PERSONNALISATION -->
+  <!-- Google maps -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAaOXylYTPO7oJPbkkEISS5nsw_iZSPTfQ"></script>
+   <script src="js/jquery.masked.input.js"></script>
+  <script src="js/global_config.js"></script>
+  <script src="js/formdata.js"></script>
+  <script src="js/openCartAPI.js"></script>
+  <script src="js/login.js"></script>
+  <script src="js/trigger.js"></script>
+  <script src="js/barcode.js"></script>
+  <script src="js/bonplans.js"></script>
+  <script src="js/geolocation.js"></script>
+   <script src="js/notifications_push.js"></script>
+   <script src="js/share.js"></script>
+  <!-- FIN PERSONNALISATION -->
+  
+  <!-- Google fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Lato:300" rel="stylesheet"> 
+  <link rel="stylesheet" href="components/loader.css">
+  <!--  ONSEN CSS -->
+  <!-- <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css">  -->
+  <!-- <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsen-css-components.min.css">  -->
+  
+  <link rel="stylesheet" href="lib/onsen/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsen/css/onsen-css-components.css">
+  
+  <link rel="stylesheet" href="css/application.css">
+  <link rel="stylesheet" href="css/openCartMOB.css">
+  <link rel="stylesheet" href="css/bonplans.css">
+
+  <!-- BOOTSTRAP -->
+  <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css">
+  
+  <!--  CUSTOM PLATFORM RELATED CSS -->
+  <!--Doesn't seem to work -->
+  <!--  
+  	<ons-if platform="ios">
+     <link rel="stylesheet" href="css/ios.css">
+  	</ons-if>
+  
+  <ons-if platform="android">
+     <link rel="stylesheet" href="css/android.css">
+  </ons-if>  -->
+  
+  <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+  
+  <script>
+    logDebug("#############################  INIT ############################");
+    ons.bootstrap()
+      .controller('AppController', function() {
+      });
+    //Plugin cordova-device
+    document.addEventListener("deviceready", onDeviceReady);
+    logDebug("############ NOVACARD: ons ready");
+    ons.ready(function() {       
+        logDebug("NOVACARD: initialisation trigger appBar");
+        //Capter le changement d'index de la tabbar -- Doit être fait dans ons.ready
+        appTab.on("postchange", appTabTrigger);
+        
+        logDebug("NOVACARD: initialisation trigger init");
+        //Permet de lier le silent login au chargement de la page principale
+        document.addEventListener('init', initTrigger);
+        
+        //Cacher ou montrer la appTab bar lorsque le clavier monte ou descend
+        document.addEventListener("hidekeyboard", keyBoardShow);
+        document.addEventListener("showkeyboard", keyBoardHide);
+        
+        //Trying to debug input issues -- Exists only on Android versions previous to 4.4.X
+        //Au bout d'un moment, l'évènement n'est plus déclenché pour aucune touche du clavier 
+        //virtuel à l'exception de la 13
+        //document.addEventListener('keypress', keyTrigger);
+        $(".page__content").on("dragstart", function(event){
+        	//logDebug("[PAGE DRAG]");
+        	//logDebug(event);
+        	//logDebug("[YPOS] => "+event.originalEvent.gesture.center.clientY);
+        	GLOBAL_yPos = event.originalEvent.gesture.center.clientY;
+        });
+        
+        //Capter l'appel au backbutton
+       //Source : stackoverflow => https://stackoverflow.com/questions/28766130/how-to-handle-hardware-back-button-on-ons-dialog
+       //Voir également : https://github.com/OnsenUI/OnsenUI/issues/78
+      //Mais aussi https://stackoverflow.com/questions/36322371/onsen-ui-back-and-menu-button 
+       
+       //Ne fonctionne pas 
+       //ons.disableDeviceBackButtonHandler();
+       //Remplacer le comportement par défaut
+       try{
+       		ons.setDefaultDeviceBackButtonListener(backButtonCallback);
+       }
+       catch(e){
+    	   logDebug("[BACKBUTTON] Votre version d'android/iOs peut présenter des incompatibilités avec l'application");
+       }
+       document.addEventListener("backbutton", backButtonCallback, false);
+       
+       //Custom version display
+       //if(GLOBAL_appParams.showVersion){
+    	   //Event natively included to monaca/cordova ?
+       	   $("ons-toolbar").on("doubletap",function(){
+       			versionOn();
+       		 	//Cheat code pour basculer de dev en prod et vice versa
+       			switchEnvTrigger();
+            	setTimeout(versionOff,2000);   
+       	   });
+       //}
+       
+        
+        //Chargement login dans tous les cas 
+        loadLogin('');
+      	//Déclencher l'autoLogin
+        if(GLOBAL_appParams.autoLogin && (GLOBAL_credFilecontent !==null)){
+        	setTimeout(silentLogin,500);
+        }
+        //Chargement coupontools dir
+        loadCToolsDir();
+        
+        //Chargement styles basés sur le device (global_config.js)
+        styleAdjust();
+       
+        //Recharger le tab enseignes
+        tabLoad(true);
+        
+        loaderOn();
+        logDebug("########## FIN ONS.Ready");
+    });
+    
+    //Harmoniser le style indépendemment de la plateforme
+    //logDebug("NOVACARD: desactiver autostyling");
+    ons.disableAutoStyling();
+    //logDebug("NOVACARD: desactiver autostyling -- FIN");
+    
+  </script>
+
+</head>
+
+<body>
+	<div id="styleFly"><style>
+		/** ALLOW TO ADD CUSTOM STYLES ON THE FLY **/
+	</style></div>
+  <ons-navigator title="Navigator" animation="slide" var="appNav" page="login" id="#appNav">
+  <ons-page id="main-page" ng-controller="AppController as app">
+    <ons-toolbar>
+      <div class="center">
+          <!--<span class="mTitle">{{app.title}}</span>-->
+          <!-- <ons-button id="novacard-notif" modifier="barbutton notif private" onclick="appNav.pushPage('notifs');setTimeout(function(){loadNotifs();},200);"><ons-icon icon="fa-envelope-o"></ons-icon></ons-button> -->
+          <ons-button id="novacard-connect" modifier="barbutton public" onclick="appTab.setActiveTab(0);"><ons-icon icon="fa-sign-in"></ons-icon><!-- <span>Se connecter</span> --></ons-button>
+          <!--<ons-button id="novacard-disconnect" modifier="barbutton private" onclick="logout();"><ons-icon icon="ion-log-out"></ons-icon> <span>Se déconnecter</span> </ons-button>-->
+      </div>
+      <div id="page-header">
+      </div>     
+    </ons-toolbar>
+    <!-- <ons-pull-hook id="pull-hook" class="hidden" height="120px" threshold-height="50px" fixed-content><span class="pre-load" ></span></ons-pull-hook>  -->
+    <ons-tabbar var="appTab" position="bottom" >
+      <ons-tab page="mescartes" label="Mes cartes" icon="fa-credit-card"></ons-tab>
+      <ons-tab page="bonplan" label="Bons plans" icon="fa-gift" ></ons-tab>
+      <ons-tab page="scan" label="Scanner" icon="fa-qrcode" onclick="loaderOn();setTimeout(function(){scanBarcode()},500);"></ons-tab>
+      <ons-tab page="enseignes" label="Enseignes" icon="fa-map-marker" active></ons-tab>
+      <ons-tab page="compte" label="Compte" icon="fa-user" ></ons-tab>
+    </ons-tabbar>
+    <ons-fab position="bottom-right" id="refresh-button" onclick="loadRefreshOn();setTimeout(function(){tabLoad(true)},200);"><ons-icon icon="ion-ios-refresh"></ons-icon></ons-fab>
+  </ons-page>
+ </ons-navigator>
+ 
+ <template id="unavailable">
+        <ons-page ons-show="app.title = 'Pas de connexion'">
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>
+              <!--<div class="center">
+                  <span class="mTitle">{{app.title}}</span>
+              </div>-->     
+        </ons-toolbar>
+        <div class="content">
+            <div id="unavailable-header">
+                <h1>Une erreur s'est produite !</h1>
+            </div>
+            <div id="unavailable-content">
+                <div id="unavailable-motif">
+                    
+                </div>
+            </div>
+           
+        </div>
+        </ons-page>
+ </template>
+ 
+ <template id="mescartes">
+    <ons-page id="mescartes-page" ons-show="app.title = 'Mes cartes'">
+      <div id="mescartes-content" class="content">
+        <div id="mescartes-header">
+           <!--Header is displayed only when logged-->
+           <!-- <ons-button modifier="mescartes-add" onclick="loadPage({credentials: true, destination:'activer', level:1});"><ons-icon icon="fa-plus-circle"></ons-icon>&nbsp;&nbsp;Ajouter une carte</ons-button> -->
+           <ons-button modifier="mescartes-add" onclick="scanBarcode();"><ons-icon icon="fa-plus-circle"></ons-icon>&nbsp;&nbsp;Ajouter une carte</ons-button>
+        </div>
+        <div id="mescartes-body" class="">
+        	<!--  Pour éviter le vide au chargement -->
+        	<div class="body-spinner"></div>
+        </div>
+        <!-- So NASTY...-->
+        <div id="login-form" class="hidden">
+            <h3> Veuillez vous authentifier </h3>
+            <div id="login-profile" class="hidden">
+           		<ons-icon icon="fa-user"></ons-icon>
+           		<span id="login-profile-name"></span>   		
+           	</div>
+            <span id="login-msg"></span>
+            <ons-input type="text" id="login" placeholder="moncompte@monmail.com"/></ons-input>
+            <ons-input type="password" id="password" placeholder="password"/></ons-input>
+            <ons-button id="login-submit" modifier="login-form" onclick="loaderOn();setTimeout(function(){login('')},500);"><ons-icon icon="fa-lock"></ons-icon>&nbsp;<span>Se connecter</span></ons-button>
+            <br/><br/><br/>
+            <ons-button id="login-forgotten" modifier="login-forgotten" onclick="loadPage({destination:'forgotten', credentials:false});"><ons-icon icon="fa-user-secret"></ons-icon>&nbsp;<span>Mot de passe oublié ?</span></ons-button>
+            <ons-button modifier="login-create" onclick="appTab.setActiveTab(4);"><ons-icon icon="fa-user-plus"></ons-icon>&nbsp;<span>Créer un compte</span></ons-button>
+        </div>
+        <!-- ... Aventura K.O.B. -->
+      </div>
+    </ons-page>
+  </template>
+  
+  <template id="enseignes">
+        <ons-page ons-show="app.title = 'Utiliser'">
+        <div class="content">            
+			<!--  Pour éviter le vide au chargement -->
+            <div id="enseignes-content">
+        		<div class="body-spinner"></div>
+            </div>
+           
+        </div>
+        </ons-page>
+   </template>
+ 
+  
+  <template id="scan">
+    <ons-page ons-show="app.title = 'Scanner'">
+      <div class="content">
+        <div class="row">
+            <div class="col-xs-1"></div>
+            <div class="col-xs-10">
+                <span id="scanError" class="text-danger bg-danger"></span>
+            </div>
+            <div class="col-xs-1"></div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3"></div>
+            <div class="col-xs-6">
+                <ons-button modifier="scanbarcode" onclick='scanBarcode();'><ons-icon icon="fa-qrcode"></ons-icon><span>Lancer le scan</span></ons-button>
+            </div>
+            <div class="col-xs-3"></div>
+        </div>
+        <div class="row">
+            <div class="col-xs-1"></div>
+            <div class="col-xs-5">
+                <ons-button modifier="ajoutMan" onclick="loaderOn();loadPage({destination: 'activer', credentials: false});"><ons-icon icon="fa-plus-square-o"></ons-icon><span>Ajouter<br/>une carte<br/> manuellement</span></ons-button>
+            </div>
+            <div class="col-xs-5">
+                <ons-button modifier="rechargeMan" onclick="loaderOn();loadPage({destination: 'recharge', credentials: true});"><ons-icon icon="fa-plus-square-o"></ons-icon><span>Saisir un<br/>coupon recharge <br/> manuellement</span></ons-button>
+            </div>
+            <div class="col-xs-1"></div>
+        </div>
+      </div>
+    </ons-page>
+  </template>
+  
+  <template id="compte">
+    <ons-page ons-show="app.title = 'Mon compte'">
+      <div class="content">
+            <div id="compte-header">
+            </div>
+			<!--  Pour éviter le vide au chargement -->
+            <div id="compte-content">
+        		<div class="body-spinner"></div>
+            </div>
+           
+        </div>
+    </ons-page>
+   </template>
+  
+  <template id="compte_OLD">
+    <ons-page ons-show="app.title = 'Mon compte'">
+      <div id="account-menu" class="content">
+        <ons-button modifier="submenu" onclick="loadPage({destination:'cgu'});"><ons-icon icon="fa-info"></ons-icon><span>C.G.U./C.G.V.</span></ons-button>
+        <ons-button modifier="submenu public" onclick="loadPage({destination:'register', credentials:false});"><ons-icon icon="fa-user-plus"></ons-icon><span>Créer compte</span></ons-button>   
+        <ons-button modifier="submenu private" onclick="loadPage({destination:'profile', credentials:true});"><ons-icon icon="fa-user"></ons-icon><span>Mon profil</span></ons-button>
+      </div>
+    </ons-page>
+   </template>
+ 
+   
+  
+  
+    <!-- PAGES SOUS-CATEG - UTILISER -->
+    <template id="geolocation">
+        <ons-page ons-show="app.title = 'A proximité'">       
+            <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>    
+            </ons-toolbar>
+            <div class="content">
+                <div id="map"></div>
+            </div>
+        </ons-page>
+    </template>
+    
+    <!-- PAGES SOUS-CATEG - NOTIFICATIONS -->
+    <template id="notifs">
+        <ons-page ons-show="app.title = 'Notifications'">       
+            <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>    
+            </ons-toolbar>
+            <div class="content">
+            	<div id="notifs-header">
+            		<h3> Notifications reçues </h3>
+            	</div>
+            	<div id="notifs-list" >
+            		<h4>Aucune notification</h4>
+            	</div>
+            </div>
+        </ons-page>
+    </template>
+    
+    <!-- PAGES SOUS-CATEG - MES CARTES -->
+    <template id="login">
+        <ons-page id="login-page" ons-show="app.title = 'Se connecter'">
+        <ons-toolbar>
+            <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>   
+            </ons-toolbar>
+            <div id="login-content" class="content">
+                <div id="login-form2">
+                    <h3> Veuillez vous authentifier </h3>
+                    <span id="login-msg2"></span>
+                    <ons-input type="text" id="login2" placeholder="moncompte@monmail.com"/></ons-input>
+                    <ons-input type="password" id="password2" placeholder="password"/></ons-input>
+                    <ons-button modifier="login-form" onclick="loaderOn();setTimeout(function(){login('2')},500);"><ons-icon icon="fa-lock"></ons-icon>&nbsp;<span>Se connecter</span></ons-button>
+                    <br/><br/><br/>
+                    <ons-button modifier="login-forgotten" onclick="loadPage({destination:'forgotten', credentials:false});"><ons-icon icon="fa-user-secret"></ons-icon>&nbsp;<span>Mot de passe oublié ?</span></ons-button>
+                    <ons-button modifier="login-create" onclick="appTab.setActiveTab(4);"><ons-icon icon="fa-user-plus"></ons-icon>&nbsp;<span>Créer un compte</span></ons-button>
+                </div>  
+            </div>
+        </ons-page>
+    </template>
+    
+    <template id="cardDetail">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>   
+        </ons-toolbar>
+        
+        <div class="content">
+            <div id="cardTop" class="row">
+                <div class="col-xs-4">
+                    <img id="cardDetail-image" />
+                </div>
+                <div class="col-xs-7">
+                    <span id="cardDetail-numCarte"></span><br/>
+                    <div class="row">
+                        <div class="col-xs-4"><span id="cardDetail-pme1"></span></div>
+                        <div class="col-xs-4"><span id="cardDetail-pme2"></span></div>
+                        <div class="col-xs-4"><span id="cardDetail-status"></span></div>
+                    </div>
+                </div>
+            </div>
+            <h3 class="cardH">Actions</h3>
+            <div id="cardDetail-actions">
+            	<span>Aucune action possible</span>
+            </div>
+            <h3 class="cardH">Avantages</h3>
+            <div id="cardDetail-avantages">
+                <img src="img/ajax-loader.gif" />
+            </div>
+            <h3 class="cardH">Liste des transactions</h3>
+            <div id="cardDetail-transacs"></div>
+        </div>
+        </ons-page>
+    </template>
+    
+     <template id="cardRecharge">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>   
+        </ons-toolbar>
+        
+        <div class="content">
+            <div id="cardRechTop" class="row">
+                <div class="col-xs-4">
+                    <img id="cardRech-image" />
+                </div>
+                <div class="col-xs-7">
+                    <span id="cardRech-numCarte"></span><br/>
+                </div>
+            </div>
+            <div id="cardRech-actions">
+                <span id="cardRech-message"></span>
+                <div id="cardRech-form">
+                    <form id="cardRech-form" method="POST" action="">
+					    <input type="hidden" name="numCarte"/>
+						<div style="margin-top:2%;" class="col-xs-4 col-sm-4 col-md-2 col-lg-2" >
+							<input type="number" class="form-control" name="r" /> 
+						</div>
+						<div style="margin-top:2%;" class="col-xs-4 col-sm-4 col-md-2 col-lg-2">
+						<input type="number" class="form-control" name="c" /> 
+						</div>
+						<div style="margin-top:2%;" class="col-xs-4 col-sm-4 col-md-2 col-lg-2">
+						<input type="number" class="form-control" name="t1" /> 
+						</div>
+						<div style="margin-top:2%;" class="col-xs-4 col-sm-4 col-md-2 col-lg-2">
+							<input type="number" class="form-control" name="t2" /> 
+						</div>
+						<div style="margin-top:2%;" class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+							<input type="number" class="form-control" name="d" /> 
+						</div>
+						<div style="margin-top:2%;" class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+							<input type="number" class="form-control" name="h" /> 
+						</div>
+						<div style="margin-top:2%;" class="col-xs-6 col-sm-6 col-md-3 col-lg-3">
+							<input type="number" class="form-control" name="v" /> 
+						</div>
+					</form>
+                    <ons-button modifier="cardRech-button" onclick="loaderOn();setTimeout(sendRechargeForm,500);">Créditer la recharge</ons-button>
+                </div>
+            </div>
+            
+        </div>
+        </ons-page>
+    </template>
+    
+    <!-- PAGES SOUS-CATEG - BON PLANS - IFRAME-->
+    <template id="bonplan">
+        <ons-page>
+           <iframe id="bonplan-frame" src=""></iframe>
+        </ons-page>
+    </template>
+    
+    <!-- PAGES SOUS-CATEG - BON PLANS - PROP2 -->
+    <template id="bonplanV2">
+        <ons-page ons-show="app.title = 'Bon plans'">
+        <div class="content">
+            <div id="bonplan-header">
+            </div>
+            <div id="bonplan-content">
+            </div>
+        </div>
+        </ons-page>
+    </template>
+   	
+    <template id="generic-divbp">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>    
+        </ons-toolbar>
+        
+        <div id="gen-content-divbp" class="content">
+            <iframe id="divbp-frame" src="" onload="setTimeout(function(){loaderOff()},4000);"></iframe>
+        </div>
+        </ons-page>
+    </template>
+    
+    <template id="generic-div1">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>    
+        </ons-toolbar>
+        
+        <div id="gen-content-div1" class="content"></div>
+        </ons-page>
+    </template>
+    
+    <template id="generic-div2">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>     
+        </ons-toolbar>
+        
+        <div id="gen-content-div2" class="content"></div>
+        </ons-page>
+    </template> 
+    
+    <template id="generic-div3">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>   
+        </ons-toolbar>
+        
+        <div id="gen-content-div3" class="content"></div>
+        </ons-page>
+    </template> 
+    
+    <template id="generic-div4">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>     
+        </ons-toolbar>
+        <div id="gen-content-div4" class="content"></div>
+        </ons-page>
+    </template> 
+    
+    <template id="generic-popup">
+        <ons-page>
+        <ons-toolbar>
+              <ons-button modifier="pBack" onclick="appNav.popPage();"><ons-icon icon="fa-angle-left"></ons-icon></ons-button>     
+        </ons-toolbar>
+        <div id="gen-content-popup" class="content"></div>
+        </ons-page>
+    </template>
+    <!-- MAIN SPINNER -->
+    <div class="spinner"></div>
+    <div class="version-pop hidden">
+    	<div id="app-version">
+           Novacard -- <span id="numvers"></span><br/>
+           &copy; BAXA Group -- <span id="yearvers"></span><br/>
+        </div>
+    </div>    
+</body>
+</html>

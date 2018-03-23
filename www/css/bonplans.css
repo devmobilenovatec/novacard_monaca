@@ -1,0 +1,65 @@
+#select-bp{
+	
+}
+
+.bonplan{
+	width: 45%;
+	height: auto;
+	float: left;
+	border: 1px solid #ddd;
+	overflow: hidden;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	cursor: pointer;
+	transition: border-color 0.5s linear, visibility 0.3s linear;
+}
+.selected, .bonplan:hover{
+	border: 1px solid rgb(255, 128, 0);
+}
+
+
+#divbp-frame{
+	width: 100%;
+    min-height: 120%;
+    border: 1px solid #eee;
+}
+
+.coupon_img{
+	max-width: 90%;
+    margin-left: 5%;
+    max-height: 140px;
+}
+
+.coupon_logo{
+	max-width: 28%;
+    position: absolute;
+    margin-left: 35%;
+    max-height: 20px;
+    margin-top: -19px;
+}
+
+.coupon_title{
+	display: block;
+	width: 80%;
+	margin-left: 10%;
+	text-align: center;
+	font-weight: bold;
+	font-size: 8pt !important;
+}
+.coupon_subtitle{
+	display: block;
+	width: 90%;
+	margin-left: 5%;
+	font-size: 6pt;
+	font-style: italic;
+}
+.coupon_footer{
+	z-index: 10000;
+    background-color: #fff;
+    opacity: 0.90;
+    position: relative;
+    width: 100%;
+    margin-top: -5px;
+    padding-top: 20px;
+    font-size: 7pt;
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>941666993355-qvqp10u693djt0731cvmcqtuppnfit9c.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.941666993355-qvqp10u693djt0731cvmcqtuppnfit9c</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAQgjaCAOO4zLvIh80qb_ItNeyw9Caw8Xc</string>
+	<key>GCM_SENDER_ID</key>
+	<string>941666993355</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.novatec.fidlink</string>
+	<key>PROJECT_ID</key>
+	<string>fidlink-90b72</string>
+	<key>STORAGE_BUCKET</key>
+	<string>fidlink-90b72.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true></true>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:941666993355:ios:bbda66d948c90f46</string>
+	<key>DATABASE_URL</key>
+	<string>https://fidlink-90b72.firebaseio.com</string>
+</dict>
+</plist>
